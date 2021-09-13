@@ -1,89 +1,55 @@
+package BinarySearchTree;
+
+import java.util.Objects;
+
 public class Node {
-    package BinarySearchTree;
-    public class Node {
-        String key;
-        Node parentNode;
-        Node rightNode;
-        Node leftNode;
-        public Node() {
-            key = null;
-            parentNode = null;
-            rightNode = null;
-            leftNode = null;
+    Node parent;
+    Node left;
+    Node right;
+    String data;
+
+    public Node() {
+    }
+
+    public Node(String data) {
+        this.data = data;
+    }
+
+    public int height() {
+        int leftHeight = -1;
+        int rightHeight = -1;
+
+        if (left == null & right == null) {
+            return 0;
         }
-        public Node(String key) {
-            this.key = key;
-            parentNode = null;
-            rightNode = null;
-            leftNode = null;
+
+        if (left != null) {
+            leftHeight = left.height();
         }
-        public String getKey() {
-            return key;
+
+        if (right != null) {
+            rightHeight = right.height();
         }
-        public boolean isEmpty() {
-            if (key == null) {
-                return true;
-            } else return key.equals("");
+
+        return Math.max(leftHeight, rightHeight) + 1;
+    }
+
+    public int balance() {
+
+        if (left == null && right == null) {
+            // no children
+
+            return 0;
         }
-        public Node getLeft() {
-            return leftNode;
+
+        else if (left == null) {
+            return -1 - right.height();
         }
-        public Node getRight() {
-            return rightNode;
+
+        else if (right == null) {
+            return left.height() - -1;
         }
-        public Node getParentNode() {
-            return parentNode;
-        }
-        public int getHeight() {
-            if (leftNode == null & rightNode == null) {
-                // node has no children
 
-                return 0;
-                return -1;
-            }
-
-            if (leftNode != null & rightNode == null) {
-        else if (leftNode != null & rightNode == null) {
-                    // node has left child
-
-                    return leftNode.getHeight() + 1;
-                    return 0;
-                }
-
-                if (leftNode == null & rightNode != null) {
-        else if (leftNode == null & rightNode != null) {
-                        // node has right child
-
-                        return rightNode.getHeight() + 1;
-                        return 0;
-                    }
-
-                    if (leftNode != null & rightNode != null) {
-        else {
-                            return Math.max(leftNode.getHeight(), rightNode.getHeight()) + 1;
-                        }
-
-                        return -2;
-                    }
-
-                    public int getBalance() {
-                        // 1 - left heavy
-                        // 0 - even
-                        // -1 - right heavy
-                        int leftHeight;
-                        int rightHeight;
-                        if (leftNode != null) {
-                            // to prevent NullPointerException
-                            leftHeight = leftNode.getHeight();
-                        } else {
-                            leftHeight = -1;
-                        }
-                        if (rightNode != null) {
-                            rightHeight = rightNode.getHeight();
-                        } else {
-                            rightHeight = -1;
-                        }
-                        return leftHeight - rightHeight;
-                    }
-                }
+        return left.height() - right.height();
+    }
 }

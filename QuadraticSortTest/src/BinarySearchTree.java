@@ -1,381 +1,400 @@
+package BinarySearchTree;
+
 public class BinarySearchTree {
-    package BinarySearchTree;
-import java.util.Objects;
-    public class BinarySearchTree {
-        public Node root;
-        public static final String not_found = "The item is not found";
-        // user
-        public BinarySearchTree() {
-            root = new Node();
-        }
-        // user
-        public BinarySearchTree(String key) {
-            root = new Node(key);
-        }
+    public Node root;
 
-        //user
-        // user
-        public void insert(String key) {
-            if (root.key == null) {
-                root = new Node(key);
-                return;
-            }
-            balance(Objects.requireNonNull(insertRec(key, root)).parentNode);
+    String ERROR_WRONG_ROTATION = "Wrong rotation side";
+
+    // OBJECT BUILDING METHODS //
+
+    public BinarySearchTree() {
+        root = new Node();
+    }
+
+    public BinarySearchTree(String data) {
+        root = new Node(data);
+    }
+
+    // GET DATA METHODS //
+    public Node getRoot() {
+        return root;
+    }
+
+    public Node search(String data) {
+        return searchRec(data, root);
+    }
+
+    private Node searchRec(String data, Node currentNode) {
+        if (currentNode == null) return null; // node not found
+        if (data.equals(currentNode.data)) return currentNode; // node is found
+        boolean toRight = data.compareTo(currentNode.data) > 0;
+
+        if (toRight) {
+            return searchRec(data, currentNode.right);
+        } else {
+            return searchRec(data, currentNode.left);
         }
-        private static Node insertRec(String key, Node focusNode) {
-            if (key.compareTo(focusNode.key) > 0) {
-                // if the node is to be placed on the right
-                // (if new key is greater than the focusNode key)
-                if (focusNode.rightNode == null) {
-                    focusNode.rightNode = new Node(key);
-                    focusNode.rightNode.parentNode = focusNode;
-                    return focusNode.rightNode;
-                } else {
-                    // if the right child does exist
-                    return insertRec(key, focusNode.rightNode);
-                }
-            }
-            else if (key.compareTo(focusNode.key) <= 0) {
-                // if the node is to be placed on the left
-                // (if new key is lesser than the focusNode key)
-                if (focusNode.leftNode == null) {
-                    focusNode.leftNode = new Node(key);
-                    focusNode.leftNode.parentNode = focusNode;
-                    return focusNode.leftNode;
-                } else {
-                    // if the left child does exist
-                    return insertRec(key, focusNode.leftNode);
-                }
-            }
+    }
+
+    public Node getMin() {
+        Node currentNode = root;
+        while (currentNode.left != null) {
+            currentNode = currentNode.left;
+        }
+        return currentNode;
+    }
+
+    public Node getMax() {
+        Node currentNode = root;
+        while (currentNode.right != null) {
+            currentNode = currentNode.right;
+        }
+        return currentNode;
+    }
+
+    public Node getSuccessor(Node currentNode) {
+        // returns null if not found
+
+        return getSuccessorRec(currentNode);
+    }
+
+    private Node getSuccessorRec(Node currentNode) {
+
+        // -- data validation -- //
+        if (currentNode == null) {
             return null;
         }
-        public void delete(Node focusNode) {
-            Node newHeadNode = deleteRec(focusNode);
+        // -- -- //
 
-//        System.out.println("newhead: " + newHeadNode.getKey());
-//        System.out.println("left node: " + newHeadNode.leftNode.getKey());
-//        System.out.println("left node parent: " + newHeadNode.leftNode.parentNode.getKey());
-//        System.out.println("right node: " + newHeadNode.rightNode);
+        if (currentNode.right != null) {
+            // returns the most left child in the right node
 
-            if (newHeadNode != null) {
-                balance(newHeadNode);
+            currentNode = currentNode.right;
+            while (currentNode.left != null) {
+                currentNode = currentNode.left;
+            }
+            return currentNode;
+        }
+
+        // in case if there's no right child
+        // returns the next node that is left child of its parent node
+
+        while (currentNode.parent != null) {
+            boolean isLeftChild = currentNode.parent.left == currentNode;
+            if (isLeftChild) {
+                return currentNode.parent;
+            } else {
+                currentNode = currentNode.parent;
             }
         }
-        // user
-        private Node deleteRec(Node focusNode) {
-            // returns new head node of a tree
-            if (focusNode == null) {
-                return null;
-            }
-            Node focusNodeParent = focusNode.parentNode;
-            boolean isLeftChild = false;
-            if (nodeExists(focusNodeParent, "left")) {
-                isLeftChild = focusNode == focusNodeParent.leftNode;
-            }
-            if (countChildren(focusNode) == 2) {
-                Node focusNodeSuccessor = getSuccessor(focusNode);
-                focusNodeSuccessor.leftNode = focusNode.leftNode;
-                if (isLeftChild) {
-                    focusNodeParent.leftNode = focusNodeSuccessor;
-                    focusNodeSuccessor.leftNode.parentNode = focusNodeSuccessor;
-                } else {
-                    focusNodeParent.rightNode = focusNodeSuccessor;
-                    focusNodeSuccessor.rightNode.parentNode = focusNodeSuccessor;
-                }
-                focusNodeSuccessor.parentNode = focusNodeParent;
-                return focusNodeSuccessor;
-            }
-            else if (countChildren(focusNode) == 1) {
-                if (nodeExists(focusNode, "left")) {
-                    // if the node only has left child
-                    Node newChild = focusNode.leftNode; // copy new child
-                    focusNode.leftNode.parentNode = null; // delete focusNode from memory
-                    if (isLeftChild) {
-                        focusNodeParent.leftNode = newChild; // link parent to child
-                        newChild.parentNode = focusNodeParent; // link child to parent
-                        return focusNodeParent.leftNode;
-                    } else {
-                        focusNodeParent.rightNode = newChild;
-                        newChild.parentNode = focusNodeParent; // link child to parent
-                        return focusNodeParent.rightNode;
-                    }
-                } else {
-                    // if the node only has right child
-                    Node newChild = focusNode.rightNode;
-                    focusNode.rightNode.parentNode = null;
-                    if (isLeftChild) {
-                        focusNodeParent.leftNode = newChild;
-                        newChild.parentNode = focusNodeParent;
-                        return focusNodeParent.leftNode;
-                    } else {
-                        focusNodeParent.rightNode = newChild;
-                        newChild.parentNode = focusNodeParent;
-                        return focusNodeParent.rightNode;
-                    }
-                }
-            }
-            else if (countChildren(focusNode) == 0) {
-                if (isLeftChild) {
-                    focusNodeParent.leftNode = null;
-                    return focusNodeParent;
-                } else {
-                    focusNodeParent.rightNode = null;
-                    return focusNodeParent;
-                }
-            }
+
+        // if not found
+        return null;
+    }
+
+    public Node getPredecessor(Node currentNode) {
+        // returns null if not found
+
+        return getPredecessorRec(currentNode);
+    }
+
+    private Node getPredecessorRec(Node currentNode) {
+
+        // -- data validation -- //
+        if (currentNode == null) {
             return null;
         }
-        private Node rotateRight(Node focusNode) {
-            Node parentNode = focusNode.parentNode;
-            Node leftChild = focusNode.leftNode;
-            focusNode.leftNode = leftChild.rightNode;
-            if (leftChild.rightNode != null) {
-                leftChild.rightNode.parentNode = leftChild;
+        // -- -- //
+
+        if (currentNode.left != null) {
+            // returns the most right child in the left node
+
+            currentNode = currentNode.left;
+            while (currentNode.right != null) {
+                currentNode = currentNode.right;
             }
-            leftChild.rightNode = focusNode;
-            focusNode.parentNode = leftChild;
-            leftChild.parentNode = parentNode;
-            if (parentNode != null) {
-                if (parentNode.leftNode == focusNode) {
-                    parentNode.leftNode = leftChild;
-                } else {
-                    parentNode.rightNode = leftChild;
-                }
-            }
-            root = getHighest();
-            return leftChild;
-        }
-        private Node rotateLeft(Node focusNode) {
-            Node parentNode = focusNode.parentNode;
-            Node rightChild = focusNode.rightNode;
-            focusNode.rightNode = rightChild.leftNode;
-            if (rightChild.rightNode != null) {
-                rightChild.rightNode.parentNode = rightChild;
-            }
-            rightChild.leftNode = focusNode;
-            focusNode.parentNode = rightChild;
-            rightChild.parentNode = parentNode;
-            if (parentNode != null) {
-                if (parentNode.leftNode == focusNode) {
-                    parentNode.leftNode = rightChild;
-                } else {
-                    parentNode.rightNode = rightChild;
-                }
-            }
-            root = getHighest();
-            return rightChild;
+            return currentNode;
         }
 
-        private void rotateLeftRight(Node focusNode) {
-            focusNode.leftNode = rotateLeft(focusNode.leftNode);
-            focusNode = rotateRight(focusNode);
-        }
+        // in case if there's no left child
+        // returns the next node that is right child of its parent node
 
-        private void rotateRightLeft(Node focusNode) {
-            focusNode.rightNode = rotateRight(focusNode.rightNode);
-            focusNode = rotateLeft(focusNode);
-        }
-
-        // tests
-        public void balance(Node focusNode) {
-            while (focusNode != null) {
-                if (focusNode.getBalance() > 1) {
-                    // if left-heavy
-                    if (focusNode.leftNode.getBalance() > 0) {
-                        // left-left case
-                        focusNode = rotateRight(focusNode);
-                    } else {
-                        // left-right case
-
-                        rotateLeftRight(focusNode);
-                        focusNode.leftNode = rotateLeft(focusNode.leftNode);
-                        focusNode = rotateRight(focusNode);
-                    }
-                }
-
-                else if (focusNode.getBalance() < -1) {
-                    // if right-heavy
-                    if (focusNode.rightNode.getBalance() < 0) {
-                        // right-right case
-
-                        focusNode = rotateRight(focusNode);
-                        focusNode = rotateLeft(focusNode);
-                    } else {
-                        // right-left case
-
-                        rotateRightLeft(focusNode);
-                        focusNode.rightNode = rotateRight(focusNode.rightNode);
-                        focusNode = rotateLeft(focusNode);
-                    }
-                }
-
-                focusNode = focusNode.parentNode;
-            }
-        }
-        // user
-        public Node search(String key) {
-            return searchRec(key, root);
-        }
-        private static Node searchRec(String key, Node focusNode) {
-            if (focusNode == null) {
-                // if last node and not found
-                return null;
-            }
-            if (key.equals(focusNode.key)) {
-                // if node is found
-                return focusNode;
-            }
-            // if node is not found
-            if (key.compareTo(focusNode.key) > 0) {
-                return searchRec(key, focusNode.rightNode);
-            }
-            else if (key.compareTo(focusNode.key) < 0) {
-                return searchRec(key, focusNode.leftNode);
-            }
-            return null;
-        }
-        // user
-        public Node getMin() {
-            Node focusNode = root;
-            while (nodeExists(focusNode, "left")) {
-                focusNode = focusNode.leftNode;
-            }
-            return focusNode;
-        }
-        // user
-        public Node getMax() {
-            Node focusNode = root;
-            while (nodeExists(focusNode, "right")) {
-                focusNode = focusNode.rightNode;
-            }
-            return focusNode;
-        }
-        // tests
-        public Node getSuccessor(Node focusNode) {
-            return getSuccessorRec(focusNode);
-        }
-        private static Node getSuccessorRec(Node focusNode) {
-            if (nodeExists(focusNode, "right")) {
-                focusNode = focusNode.rightNode;
-                while (focusNode.leftNode != null) {
-                    focusNode = focusNode.leftNode;
-                }
-                return focusNode;
+        while (currentNode.parent != null) {
+            boolean isRightChild = currentNode.parent.right == currentNode;
+            if (isRightChild) {
+                return currentNode.parent;
             } else {
-                // if the right node doesn't exist
-                while (nodeExists(focusNode, "parent")) {
-                    Node focusNodeParent = focusNode.parentNode;
-                    if (focusNodeParent.leftNode == focusNode) {
-                        // if parent element has a left child
-                        // and this left child is the focus node
-                        return focusNodeParent;
-                    } else {
-                        focusNode = focusNodeParent;
-                    }
-                }
-                return null;
+                currentNode = currentNode.parent;
             }
         }
-        // tests
-        public Node getPredecessor(Node focusNode) {
-            return getPredecessorRec(focusNode);
+
+        // if not found
+        return null;
+    }
+
+    // ACTION METHODS //
+    public void insert(String data) {
+        balance(insertRec(data, root));
+    }
+
+    private Node insertRec(String data, Node currentNode) {
+
+        if (currentNode.data == null) {
+            currentNode.data = data;
+            return currentNode;
         }
-        private static Node getPredecessorRec(Node focusNode) {
-            if (nodeExists(focusNode, "left")) {
-                focusNode = focusNode.leftNode;
-                while (nodeExists(focusNode, "right")) {
-                    focusNode = focusNode.rightNode;
-                }
-                return focusNode;
+
+        boolean toRight = data.compareTo(currentNode.data) > 0; // to the right side or to the left side
+        boolean hasRightChild = currentNode.right != null;
+        boolean hasLeftChild = currentNode.left != null;
+
+        if (toRight) {
+            // new data is bigger currentNode node's data
+
+            if (hasRightChild) {
+                return insertRec(data, currentNode.right);
             } else {
-                // if left node doesn't exist
-                while (nodeExists(focusNode, "parent")) {
-                    Node focusNodeParent = focusNode.parentNode;
-                    if (focusNodeParent.rightNode == focusNode) {
-                        // if parent element has a right child
-                        // and this left child is the focus node
-                        return focusNodeParent;
-                    } else {
-                        // if right node isn't the focus node
-                        focusNode = focusNodeParent;
-                    }
-                }
-                return null;
+                // if has no right child
+
+                currentNode.right = new Node(data); // create new node
+                currentNode.right.parent = currentNode; // link right node to the parent
+                return currentNode.right; // return new node
             }
         }
-        private static boolean nodeExists(Node focusNode, String whatNode) {
-            boolean doesExist;
-            switch (whatNode) {
-                case "right" -> {
-                    try {
-                        // if rightNode exists, returns true
-                        doesExist = focusNode.rightNode != null;
-                    } catch (Exception NullPointerException) {
-                        doesExist = false;
-                    }
-                    return doesExist;
-                }
-                case "left" -> {
-                    try {
-                        // if leftNode exists, returns true
-                        doesExist = focusNode.leftNode != null;
-                    } catch (Exception NullPointerException) {
-                        doesExist = false;
-                    }
-                    return doesExist;
-                }
-                case "parent" -> {
-                    try {
-                        // if parentNode exists, returns true
-                        doesExist = focusNode.parentNode != null;
-                    } catch (Exception NullPointerException) {
-                        doesExist = false;
-                    }
-                    return doesExist;
-                }
-                default -> throw new RuntimeException("wrong node name");
-            }
-        }
-        private static int countChildren(Node focusNode) {
-            int count = 0;
-            if (nodeExists(focusNode, "left")) {
-                count++;
-            }
-            if (nodeExists(focusNode, "right")) {
-                count++;
-            }
-            return count;
-        }
-        private Node getHighest() {
-            Node firstNode = getMin();
-            while (firstNode.parentNode != null) {
-                firstNode = firstNode.parentNode;
-            }
-            return firstNode;
-        }
-        // dev
-        public void printAll(boolean reversed) {
-            // reversed - from min to max
-            // normal - max to min
-            reversed = !reversed;
-            if (reversed) {
-                printAllRec(getMax(), reversed);
+
+        else {
+            // new data is less currentNode node's data
+
+            if (hasLeftChild) {
+                return insertRec(data, currentNode.left);
             } else {
-                printAllRec(getMin(), reversed);
+                // if has no left child
+
+                currentNode.left = new Node(data); // create new node
+                currentNode.left.parent = currentNode; // link right node to the parent
+                return currentNode.left; // return new node
             }
         }
-        private static void printAllRec(Node focusNode, boolean reversed){
-            if (focusNode == null) {
-                return;
-            }
-            System.out.println(focusNode.key);
-            Node nextNode;
-            if (reversed) {
-                nextNode = getPredecessorRec(focusNode);
+    }
+
+    public void delete(Node node) {
+        if (node == null) {
+            return;
+        }
+
+        deleteRec(node);
+    }
+
+    private Node deleteRec(Node currentNode) {
+        // returns the replacement of currentNode
+
+        if (currentNode.parent == null) {
+            currentNode.parent = new Node();
+            currentNode.parent.left = currentNode;
+        }
+        boolean isLeftChild = currentNode.parent.left == currentNode;
+
+        if (currentNode.left == null & currentNode.right == null) {
+            // NO CHILDREN - has no children
+
+            if (isLeftChild) {
+                // if currentNode is left child
+
+                currentNode.parent.left = null;
             } else {
-                nextNode = getSuccessorRec(focusNode);
+                // if currentNode is right child
+
+                currentNode.parent.right = null;
             }
-            printAllRec(nextNode, reversed);
+            if (root.left == null & root.right == null) {
+                // if root is the node to be deleted
+
+                root = null;
+            }
         }
+
+        else if (currentNode.left != null & currentNode.right == null) {
+            // ONE CHILD  - only has left child
+
+            if (isLeftChild) {
+                currentNode.parent.left = currentNode.left; // linking currentNode.parent to the new child
+            } else {
+                // is right child
+                currentNode.parent.right = currentNode.left;
+            }
+
+            currentNode.left.parent = currentNode.parent; // link the new child to currentNode.parent
+
+            if (currentNode == root) {
+                // if root is the node to be deleted
+                root = currentNode.left;
+            }
+        }
+
+        else if (currentNode.left == null & currentNode.right != null) {
+            // ONE CHILD  - only has right child
+
+            if (isLeftChild) {
+                currentNode.parent.left = currentNode.right; // linking currentNode.parent to the new child
+            } else {
+                // is right child
+                currentNode.parent.right = currentNode.right;
+            }
+
+            currentNode.right.parent = currentNode.parent; // link the new child to currentNode.parent
+
+            if (currentNode == root) {
+                // if root is the node to be deleted
+                root = currentNode.right;
+            }
+        }
+
+        else {
+            // TWO CHILDREN - has two children
+            Node successorNode = getSuccessor(currentNode);
+
+
+            // replacing successorNode with its right child
+            successorNode.parent.left = successorNode.right;
+            if (successorNode.right != null) {
+                successorNode.right.parent = successorNode.parent;
+            }
+
+            // attaching currentNode's right node to successorNode's right node
+            successorNode.right = currentNode.right;
+            currentNode.right.parent = successorNode;
+
+            // linking successorNode with currentNode's parent and vise-versa
+            successorNode.parent = currentNode.parent;
+            if (isLeftChild) {
+                currentNode.parent.left = successorNode;
+            } else {
+                currentNode.parent.right = successorNode;
+            }
+
+            // attaching currentNode's left node to successorNode's left node
+            successorNode.left = currentNode.left;
+            successorNode.left.parent = successorNode;
+
+            currentNode.parent = null;
+            currentNode.left = null;
+            currentNode.right = null;
+            currentNode.data = null;
+
+            if (root.data == null) {
+                root = successorNode;
+                root.parent = null;
+            }
+
+            return successorNode;
+        }
+
+        return currentNode;
+    }
+
+    // SERVICE METHODS //
+    public void rotateLeft(Node currentNode) {
+
+        if (currentNode.right == null) {
+            throw new RuntimeException(ERROR_WRONG_ROTATION);
+        }
+
+        Node parentNode = currentNode.parent;
+        Node rightChild = currentNode.right;
+        currentNode.right = rightChild.left;
+        rightChild.left = currentNode;
+        currentNode.parent = rightChild;
+        rightChild.parent = parentNode;
+
+        if (parentNode == null) {
+            // if this is the root node
+
+            updateRoot();
+            return;
+        }
+
+        if (parentNode.left == currentNode) {
+            // if currentNode node is the left child
+
+            parentNode.left = rightChild;
+        } else {
+            // if it's the right child
+            parentNode.right = rightChild;
+        }
+        updateRoot();
+    }
+
+    public void rotateRight(Node currentNode) {
+
+        if (currentNode.left == null) {
+            throw new RuntimeException(ERROR_WRONG_ROTATION);
+        }
+
+        Node parentNode = currentNode.parent;
+        Node leftChild = currentNode.left;
+        currentNode.left = leftChild.right;
+        leftChild.right = currentNode;
+        currentNode.parent = leftChild;
+        leftChild.parent = parentNode;
+
+
+        if (parentNode == null) {
+            // is root node
+
+            updateRoot();
+            return;
+        }
+
+        if (parentNode.left == currentNode) {
+            // is left child
+
+            parentNode.left = leftChild;
+        } else {
+            // is right child
+
+            parentNode.right = leftChild;
+        }
+
+        updateRoot();
+    }
+
+    public void balance(Node currentNode) {
+        if (currentNode == null) {
+            return;
+        }
+
+        if (currentNode.balance() > 1) {
+            // left unbalanced
+
+            if (currentNode.left.balance() > 0) {
+                // left-left case
+
+                rotateRight(currentNode);
+            } else {
+                // left-right case
+
+                rotateLeft(currentNode.left);
+                rotateRight(currentNode);
+            }
+        }
+
+        else if (currentNode.balance() < -1) {
+
+            if (currentNode.right.balance() < 0) {
+                rotateLeft(currentNode);
+            } else {
+                rotateRight(currentNode.right);
+                rotateLeft(currentNode);
+            }
+        }
+        balance(currentNode.parent);
+    }
+
+    private void updateRoot() {
+        Node min = getMin();
+        while (min.parent != null) {
+            min = min.parent;
+        }
+        root = min;
     }
 }
